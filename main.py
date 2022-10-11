@@ -1,65 +1,59 @@
 import numpy as np
 import ga
 
-
 def main():
-    # entradas da equação
-    equation_inputs = [4, -2, 3.5, 5, -11, -4.7]
-    # número de pesos a otimizar
-    num_weights = 6
+    equationInputs = [15, 10, 5, 5, 8, 17] 
 
-    sol_per_pop = 8
+    numberWeights = 6  
+    solutionsPerPopulations = 6  
+    
+    populationsSize = (solutionsPerPopulations, numberWeights)
+    
+    population = np.random.randint(
+        low=0, high=2,
+        size=populationsSize)
+    print("População inicial:")
+    print(population)
 
-    # população tem sol_per_pop cromossomos com num_weights gens
-    pop_size = (sol_per_pop, num_weights)
+    numberGenerations = 5
 
-    # População inicial
-    new_population = np.random.uniform(low=-4.0, high=4.0, size=pop_size)
-
-    # Algoritmo genético
-    num_generations = 100
-    num_parents_mating = 4
-
-    for generation in range(num_generations):
-        print(f"Geração: {generation}")
-
-        # medir o ‘fitness’ de cada cromossomo na população
-        fitness = ga.cal_pop_fitness(equation_inputs, new_population)
-
-        print("Valores de fitness:")
+    numberParentsCrossover = 4
+    
+    for generation in range(numberGenerations):
+        print(f"\nGeração {generation}")
+        
+        fitness = ga.fitness(equationInputs, population)
+        print("\nFitness:")
         print(fitness)
+        
+        selectedParents = ga.selection(
+            population, fitness, numberParentsCrossover)
+        print("\nGenitores selecionados:")
+        print(selectedParents)
+        
+        offspringCrossover = ga.crossover(
+            selectedParents, (
+                solutionsPerPopulations - numberParentsCrossover,
+                numberWeights
+            )
+        )
+        print("\nFilhos gerados por crossover:")
+        print(offspringCrossover)
 
-        # Selecionar os melhores pais na população para o cruzamento
-        parents = ga.select_mating_pool(new_population, fitness, num_parents_mating)
+        offspringMutation = ga.mutation(offspringCrossover)
+        print("\nFilhos pós mutação:")
+        print(offspringMutation)
 
-        print("Genitores selecionados:")
-        print(parents)
+        population[0:selectedParents.shape[0], :] = selectedParents
 
-        # formar a próxima geração usando crossover
-        offspring_crossover = ga.crossover(parents, offspring_size=(
-            pop_size[0] - parents.shape[0], num_weights
-        ))
-        print("Resultado do crossover:")
-        print(offspring_crossover)
-
-        # adicionar variações aos filhos usando mutação
-        offspring_mutation = ga.mutation(offspring_crossover)
-        print("Resultado da mutação:")
-        print(offspring_mutation)
-
-        # criar a nova população baseada nos pais e filhos
-        new_population[0:parents.shape[0], :] = parents
-        new_population[parents.shape[0]:, :] = offspring_mutation
-
-        best_result = np.max(np.sum(new_population*equation_inputs, axis=1))
-        print(f"Melhor resultado depois da geração {generation}: {best_result}")
-
-    fitness = ga.cal_pop_fitness(equation_inputs, new_population)
-    best_match_idx = np.where(fitness == np.max(fitness))
-
-    print("Melhor solução: ", new_population[best_match_idx, :])
-    print("Fitness da melhor solução: ", fitness[best_match_idx])
-
-
-if __name__ == '__main__':
+        population[selectedParents.shape[0]:, :] = offspringMutation
+        print("\nNova população:")
+        print(population)
+        print("Melhor resultado: ", np.max(
+            ga.fitness(equationInputs, population)))
+    fitness = ga.fitness(equationInputs, population)
+    bestFitIdx = np.where(fitness == np.max(fitness))
+    print("Melhor resultado: ", population[bestFitIdx, :])
+    print("Fitness do melhor: ", fitness[bestFitIdx])
+if __name__ == "__main__":
     main()
